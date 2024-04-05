@@ -1,7 +1,5 @@
 package x.bod.eval
 
-import TypeExp
-
 class Expression(private val exp: String) {
     var result: String = ""
         private set
