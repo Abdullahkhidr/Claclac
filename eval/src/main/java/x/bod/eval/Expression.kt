@@ -1,3 +1,7 @@
+package x.bod.eval
+
+import TypeExp
+
 class Expression(private val exp: String) {
     var result: String = ""
         private set
@@ -25,11 +29,16 @@ class Expression(private val exp: String) {
         if (group != null) {
             group.groups[0]!!.range.apply {
                 val range = first + 1..<last
-                return _evaluate(subExp.replaceRange(group.groups[0]!!.range, _evaluate(subExp.substring(range))))
+                return _evaluate(
+                    subExp.replaceRange(
+                        group.groups[0]!!.range,
+                        _evaluate(subExp.substring(range))
+                    )
+                )
             }
         }
 
-        /**Check if there is Exponential Expression, Then evaluate it*/
+        /**Check if there is Exponential x.bod.eval.Expression, Then evaluate it*/
         if (powExp != null) return _evaluate(subExp.replaceRange(powExp.range, calcExp(powExp)))
 
         /**Add The Same Priority Expressions In Array and sort By Index*/
@@ -45,7 +54,12 @@ class Expression(private val exp: String) {
         }
 
         if (expressions.isNotEmpty())
-            return _evaluate(subExp.replaceRange(expressions.first().range, calcExp(expressions.first())))
+            return _evaluate(
+                subExp.replaceRange(
+                    expressions.first().range,
+                    calcExp(expressions.first())
+                )
+            )
         try {
             return subExp.toDouble().toString()
         } catch (e: Exception) {
