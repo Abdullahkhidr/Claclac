@@ -1,17 +1,17 @@
 package x.bod.eval
 
-class Expression(private val exp: String) {
+class Expression(val equation: String) {
     var result: String = ""
         private set
     private val numExp = "([-+]?[0-9]+\\.?[0-9]*)"
 
     fun evaluate() {
         if (result.isEmpty())
-            result = _evaluate(exp)
+            result = _evaluate(equation)
     }
 
     private tailrec fun _evaluate(subExp: String): String {
-        clearExp(subExp).apply {
+        cleanExp(subExp).apply {
             if (subExp != this) return _evaluate(this)
         }
         val group = Regex("\\([0-9.+\\-*/^%]+\\)").find(subExp)
@@ -74,21 +74,27 @@ class Expression(private val exp: String) {
             .apply { return if (this > 0) "+$this" else "$this" }
     }
 
-    private tailrec fun clearExp(e: String): String {
+    private tailrec fun cleanExp(e: String): String {
+        if (e.contains(" ")) return cleanExp(e.replace(" ", ""))
         val signsPos = mutableListOf<Int>()
         e.indexOf("++").apply { if (this != -1) signsPos.add(this) }
         e.indexOf("--").apply { if (this != -1) signsPos.add(this) }
         e.indexOf("+-").apply { if (this != -1) signsPos.add(this) }
         e.indexOf("-+").apply { if (this != -1) signsPos.add(this) }
         signsPos.sortBy { it }
-        return if (signsPos.isEmpty()) e
-        else {
+        return if (signsPos.isEmpty()) {
+            var pos = Regex("[0-9]\\(").find(e)?.range?.first
+            if (pos == null) pos = Regex("\\)[0-9]").find(e)?.range?.first
+            if (pos != null) {
+                return cleanExp(e.replaceRange(pos..pos, "${e[pos]}*"))
+            } else return e
+        } else {
             val range = signsPos.first()..signsPos.first() + 1
             when (e.substring(range)) {
-                "++" -> clearExp(e.replaceRange(range, "+"))
-                "--" -> clearExp(e.replaceRange(range, "+"))
-                "-+" -> clearExp(e.replaceRange(range, "-"))
-                else -> clearExp(e.replaceRange(range, "-"))
+                "++" -> cleanExp(e.replaceRange(range, "+"))
+                "--" -> cleanExp(e.replaceRange(range, "+"))
+                "-+" -> cleanExp(e.replaceRange(range, "-"))
+                else -> cleanExp(e.replaceRange(range, "-"))
             }
         }
     }
